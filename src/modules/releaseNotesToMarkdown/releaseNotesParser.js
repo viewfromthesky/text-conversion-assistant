@@ -3,12 +3,7 @@ import parseNode from "../../parsers/bikeXMLParser/nodeParser.js";
 const RELEASE_VER_REGEXP = /\d{4}\.\d{2}(\.\d{2,3})?(\sLTS)?/;
 
 /**
- * @typedef {Object} Story
- * @property {string} categoryName
- * @property {string} id
- * @property {string} url
- * @property {string} name
- * @property {Array<string>} authors
+ * @typedef {import('./index.d.ts').Story} Story
 */
 
 /**

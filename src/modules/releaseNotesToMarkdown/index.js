@@ -6,6 +6,7 @@ import isString from "../../validators/stringValidator.js";
 import isWeekNumber from "../../validators/weekNumberValidator.js";
 import { GLOBAL_ARGS } from "../../parsers/argumentParser/knownArguments.js";
 import parseToBasicSchema from "./releaseNotesParser.js";
+import convertToMd from "./notesDataToMd.js";
 
 const KNOWN_ARGUMENTS = {
   ...GLOBAL_ARGS,
@@ -87,8 +88,6 @@ function findListByRootNode(content, rootNodeComparison) {
 
   return content.ul[idxMap.ulIdx].li[idxMap.liIdx];
 }
-
-function findSelectionByVersionNumber() { }
 
 /**
  * @param {Object} inputJson
@@ -211,9 +210,10 @@ export default async function execute(args) {
     }
 
     const notesData = parseToBasicSchema(selection);
+    const markdownNotes = convertToMd(notesData, argMap.dialect);
 
     const outputPath = resolve(argMap.outputPath);
-    await writeFile(outputPath, JSON.stringify(notesData, undefined, 2));
+    await writeFile(outputPath, markdownNotes);
   } catch(e) {
     console.error(e);
 
