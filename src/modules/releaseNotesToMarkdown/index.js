@@ -1,6 +1,7 @@
-import { readFile, writeFile } from "node:fs/promises";
+import { writeFile } from "node:fs/promises";
 import { resolve } from "node:path";
 import parseArguments from "../../parsers/argumentParser/index.js";
+import parseBikeFile from "../../parsers/bikeXMLParser/index.js";
 import isString from "../../validators/stringValidator.js";
 import isWeekNumber from "../../validators/weekNumberValidator.js";
 import { GLOBAL_ARGS } from "../../parsers/argumentParser/knownArguments.js";
@@ -38,34 +39,58 @@ const KNOWN_ARGUMENTS = {
   }
 };
 
-function findSelectionByWeekNumber(bodyJsonArr, weekNo = 0) {
-  // No narrowing to do
-  if(!weekNo) {
-    return bodyJsonArr;
+/**
+ * @param {Object} content
+ * @param {string | RegExp} rootNodeTextContent
+ * @returns
+ */
+function findListByRootNode(content, rootNodeComparison) {
+  if(typeof content !== "object" || !rootNodeComparison) {
+    return undefined;
   }
 
-  const idxMap = bodyJsonArr?.reduce((map, outerEl, bodyIdx) => {
-    outerEl?.ul?.some((innerEl, ulIdx) => {
-      return innerEl?.li?.some((listItem, liIdx) => {
-        if(listItem?.p?.includes(`Week ${weekNo}`)) {
-          map.bodyIdx = bodyIdx;
-          map.ulIdx = ulIdx;
-          map.liIdx = liIdx;
+  const idxMap = content?.ul?.reduce((map, innerEl, ulIdx) => {
+    innerEl?.li?.some((listItem, liIdx) => {
+      const found = rootNodeComparison instanceof RegExp ?
+        listItem?.p?.some((pContent) => {
+          return rootNodeComparison.test(pContent);
+        }) :
+        listItem?.p?.includes(rootNodeComparison);
 
-          return true;
-        }
-      });
+      if (found) {
+        map.ulIdx = ulIdx;
+        map.liIdx = liIdx;
+
+        return true;
+      }
     });
 
     return map;
   }, {
-    bodyIdx: 0,
-    ulIdx: 0,
-    liIdx: 0
+    ulIdx: undefined,
+    liIdx: undefined
   });
 
-  return bodyJsonArr[idxMap.bodyIdx]?.ul[idxMap.ulIdx]?.li[idxMap.liIdx];
+  // Nothing was found
+  if(
+    // idxMap may be undefined if the search elements (ul/li) aren't present
+    // at the root of the provided node
+    !idxMap ||
+    Object.values(idxMap).some((idx) => typeof idx === "undefined")
+  ) {
+    console.error(`Unable to locate root node based on comparison "${
+      rootNodeComparison
+    }"`);
+
+    return undefined;
+  }
+
+  return content.ul[idxMap.ulIdx].li[idxMap.liIdx];
 }
+
+function simplifyFileContent(inputJson) { }
+
+function findSelectionByVersionNumber() { }
 
 /**
  * @param {Object} inputJson
@@ -99,15 +124,37 @@ function getDesiredSelection(inputJson, weekNo = 0, versionNos = []) {
     return undefined;
   }
 
-  console.log("Attempting selection with criteria:", weekNo, versionNos);
-
   if(!Array.isArray(inputJson.html.body)) {
     return undefined;
   }
 
   const { body } = inputJson.html;
 
-  const weekSelection = findSelectionByWeekNumber(body, weekNo);
+  // body is assumed to contain only one element in its array
+  // Bike files always comprise a top-level "ul". HTML files might not, but this
+  // is not a generic searching function... yet.
+  const weekSelection = findListByRootNode(body[0], `Week ${weekNo}`);
+
+  if(!weekSelection) {
+    console.error(`Could not find week ${weekNo}. Try another week number.`);
+
+    return undefined;
+  }
+
+  if(versionNos.length === 0) {
+    return weekSelection;
+  }
+
+  versionNos.forEach((versionNo) => {
+    const versionContent = findListByRootNode(weekSelection, versionNo);
+
+    console.log(`${versionNo}:`, versionContent);
+  });
+
+  // const versionSelection = findSelectionByVersionNumber(
+  //   weekSelection,
+  //   versionNos
+  // );
 
   return weekSelection;
 }
@@ -136,22 +183,18 @@ export default async function execute(args) {
 
   try {
     const inputFileHandle = await argMap.inputFile();
-    const inputFile = await readFile(inputFileHandle, "utf8");
 
-    const parser = new XMLParser();
-    const parsedContent = await parser.parseStringPromise(inputFile);
+    const fileContent = await parseBikeFile(inputFileHandle);
 
-    if(!parsedContent) {
+    if(!fileContent) {
       return 102;
     }
 
     const selection = getDesiredSelection(
-      parsedContent,
+      fileContent,
       argMap.weekNumber,
       argMap.versions
     );
-
-    console.log("selection:", selection);
 
     if(!selection) {
       console.error("Failed to get selection based on criteria.")
