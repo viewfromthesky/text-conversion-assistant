@@ -1,5 +1,7 @@
 import fileParser from '../fileParser.js';
 import filePathValidator from '../../validators/filePathValidator.js';
+import moduleValidator from "../../validators/moduleExistsValidator.js";
+import moduleParser from "../moduleParser.js";
 
 export function validateArgumentMap(argMap) {
   if(!argMap || typeof argMap !== "object") {
@@ -28,5 +30,11 @@ export const ROOT = {
       short: "o",
       parse: fileParser,
       validate: filePathValidator
+    },
+    module: {
+      long: "module",
+      short: "m",
+      parse: moduleParser,
+      validate: moduleValidator
     }
 };

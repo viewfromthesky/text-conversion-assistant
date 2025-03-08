@@ -22,7 +22,7 @@ function removeFlagPrefix(flag) {
 function getOptionKey(argumentName, validArgMap) {
   const flag = removeFlagPrefix(argumentName);
   const found = Object.entries(validArgMap).find(
-    ([, config]) => (config.short.match(flag) || config.long.match(flag))
+    ([, config]) => (config.short === flag || config.long === flag)
   );
 
   if(found) {
@@ -54,9 +54,9 @@ function mapArgumentGroups(args, validArgMap) {
 
     const optionKey = getOptionKey(args[i], validArgMap);
 
-    if (!optionKey) {
-      continue;
-    }
+    // if (!optionKey) {
+    //   continue;
+    // }
 
     groups.push([optionKey, args.slice(i, groupLimit)]);
 
@@ -76,6 +76,13 @@ function mapArgumentGroups(args, validArgMap) {
 function validateOptionGroups(optionMap, validArgMap) {
   // Return early if any of the tests do not pass
   return !(optionMap.some(([key, val]) => {
+    // This isn't matched, so essentially doesn't need to work now.
+    // Expectation is this will be passed into a module and then be tested
+    // before it's used.
+    if(!key) {
+      return false;
+    }
+
     const valid = validArgMap[key].validate(val);
 
     // Quick warning for the user, only place this happens

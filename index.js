@@ -1,6 +1,5 @@
 // import { XMLParser } from "xml2js";
 import { argv } from "node:process";
-import { readFile } from "node:fs/promises";
 import parseArguments from "./src/parsers/argumentParser/index.js";
 import { ROOT } from "./src/parsers/argumentParser/knownArguments.js";
 
@@ -17,22 +16,19 @@ async function main() {
     return 2;
   }
 
-  Object.entries(parsedArgs).forEach(([key, getValue]) => {
-    try {
-      if(getValue && typeof getValue === "function") {
-        getValue().then(async (result) => {
-          const content = await readFile(result, { encoding: "utf8" });
-          console.log(`${key}: ${content}`);
-        }, (error) => {
-          console.error(error);
-        });
-      }
-    } catch (e) {
-      console.error(e);
-    }
-  });
+  if(!parsedArgs.module) {
+    console.error("No instruction given; please provide a module.");
+    return 3;
+  }
 
-  return 0;
+  const execute = (await parsedArgs.module())?.default;
+
+  if(!execute || typeof execute !== "function") {
+    console.error("Invalid module provided. Make sure the module's default export is a function.")
+    return 4;
+  }
+
+  return execute(args);
 }
 
 main().then(
