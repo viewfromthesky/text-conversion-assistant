@@ -1,7 +1,7 @@
 // import { XMLParser } from "xml2js";
 import { argv } from "node:process";
 import parseArguments from "./src/parsers/argumentParser/index.js";
-import { ROOT } from "./src/parsers/argumentParser/knownArguments.js";
+import { ROOT_ARGS } from "./src/parsers/argumentParser/knownArguments.js";
 
 async function main() {
   const args = argv.slice(2);
@@ -10,7 +10,7 @@ async function main() {
     return 1;
   }
 
-  const parsedArgs = parseArguments(args, ROOT);
+  const parsedArgs = parseArguments(args, ROOT_ARGS);
 
   if(!parsedArgs) {
     return 2;

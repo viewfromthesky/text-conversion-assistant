@@ -18,23 +18,26 @@ export function validateArgumentMap(argMap) {
   }));
 }
 
-export const ROOT = {
-  input: {
+export const GLOBAL_ARGS = {
+  inputFile: {
       long: "input",
       short: "i",
       parse: fileParser,
       validate: filePathValidator
     },
-    output: {
+    outputPath: {
       long: "output",
       short: "o",
-      parse: fileParser,
+      parse: ([, filePath]) => filePath,
       validate: filePathValidator
-    },
-    module: {
-      long: "module",
-      short: "m",
-      parse: moduleParser,
-      validate: moduleValidator
     }
 };
+
+export const ROOT_ARGS = {
+  module: {
+    long: "module",
+    short: "m",
+    parse: moduleParser,
+    validate: moduleValidator
+  }
+}

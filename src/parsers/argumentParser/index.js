@@ -54,10 +54,6 @@ function mapArgumentGroups(args, validArgMap) {
 
     const optionKey = getOptionKey(args[i], validArgMap);
 
-    // if (!optionKey) {
-    //   continue;
-    // }
-
     groups.push([optionKey, args.slice(i, groupLimit)]);
 
     groupLimit = i;
@@ -77,8 +73,7 @@ function validateOptionGroups(optionMap, validArgMap) {
   // Return early if any of the tests do not pass
   return !(optionMap.some(([key, val]) => {
     // This isn't matched, so essentially doesn't need to work now.
-    // Expectation is this will be passed into a module and then be tested
-    // before it's used.
+    // It's not recognised in this argument map, so it won't be mapped later.
     if(!key) {
       return false;
     }
