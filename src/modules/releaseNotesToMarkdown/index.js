@@ -5,7 +5,7 @@ import parseBikeFile from "../../parsers/bikeXMLParser/index.js";
 import isString from "../../validators/stringValidator.js";
 import isWeekNumber from "../../validators/weekNumberValidator.js";
 import { GLOBAL_ARGS } from "../../parsers/argumentParser/knownArguments.js";
-import { Parser as XMLParser } from "xml2js";
+import parseToBasicSchema from "./releaseNotesParser.js";
 
 const KNOWN_ARGUMENTS = {
   ...GLOBAL_ARGS,
@@ -88,8 +88,6 @@ function findListByRootNode(content, rootNodeComparison) {
   return content.ul[idxMap.ulIdx].li[idxMap.liIdx];
 }
 
-function simplifyFileContent(inputJson) { }
-
 function findSelectionByVersionNumber() { }
 
 /**
@@ -141,20 +139,25 @@ function getDesiredSelection(inputJson, weekNo = 0, versionNos = []) {
     return undefined;
   }
 
-  if(versionNos.length === 0) {
+  if(versionNos.length === 0 || !weekSelection?.ul) {
     return weekSelection;
   }
 
-  versionNos.forEach((versionNo) => {
-    const versionContent = findListByRootNode(weekSelection, versionNo);
+  const versionSelection = versionNos.reduce((versionArr, version) => {
+    const versionContent = findListByRootNode(weekSelection, version);
 
-    console.log(`${versionNo}:`, versionContent);
-  });
+    if(versionContent) {
+      versionArr.push(versionContent);
+    }
 
-  // const versionSelection = findSelectionByVersionNumber(
-  //   weekSelection,
-  //   versionNos
-  // );
+    return versionArr;
+  }, []);
+
+  // Replace ul content with only the selection
+  weekSelection.ul.length = 0;
+  weekSelection.ul = [{
+    li: versionSelection
+  }];
 
   return weekSelection;
 }
@@ -181,6 +184,12 @@ export default async function execute(args) {
     return 2;
   }
 
+  if(!argMap.outputPath) {
+    console.error("No output path specified. Module cannot continue.")
+
+    return 104;
+  }
+
   try {
     const inputFileHandle = await argMap.inputFile();
 
@@ -201,8 +210,10 @@ export default async function execute(args) {
       return 103;
     }
 
+    const notesData = parseToBasicSchema(selection);
+
     const outputPath = resolve(argMap.outputPath);
-    await writeFile(outputPath, JSON.stringify(selection, undefined, 2));
+    await writeFile(outputPath, JSON.stringify(notesData, undefined, 2));
   } catch(e) {
     console.error(e);
 

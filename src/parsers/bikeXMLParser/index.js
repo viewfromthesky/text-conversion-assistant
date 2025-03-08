@@ -2,15 +2,6 @@ import { Parser as XMLParser } from "xml2js";
 import { readFile } from "node:fs/promises";
 
 /**
- * @typedef {Object} ParserOptions
- * @property {boolean} simplify
- */
-
-function simplifyContent(parsedFileContent) {
-
-}
-
-/**
 *
 * @param {*} fileHandle
 * @param {ParserOptions} opts

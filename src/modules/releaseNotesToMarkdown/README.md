@@ -1,5 +1,9 @@
 # Module: "releaseNotesToMarkdown"
 
+Conversion script to take in release notes written in the excellent
+[Bike](https://www.hogbaysoftware.com/bike/) outliner, and convert to
+Markdown, which is more ubiquitous.
+
 ## Requirements
 * Should take in a `.bike` HTML file and convert it to Markdown and
   Slack's own bastardised version of markdown
