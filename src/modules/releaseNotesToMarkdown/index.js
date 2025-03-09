@@ -34,9 +34,20 @@ const KNOWN_ARGUMENTS = {
     short: "d",
     long: "dialect",
     parse: ([, value]) => value,
-    // TODO: convert to "isOption" validator, test against known values instead
-    // of accepting anything string-like
-    validate: isString
+    validate: (option) => {
+      const DIALECT_OPTIONS = ["default", "slack"];
+      if(!isString(option)) {
+        return false;
+      } else if(!DIALECT_OPTIONS.includes(option[1])) {
+        console.error(`Unknown value for dialect. Available choices are ${
+          DIALECT_OPTIONS.join(", ")
+        }`);
+
+        return false;
+      }
+
+      return true;
+    }
   }
 };
 

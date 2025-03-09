@@ -14,7 +14,7 @@ const KNOWN_CATEGORIES = {
     order: 0
   },
   fixes: {
-    names: "Fixes",
+    name: "Fixes",
     order: 1
   }
 };
@@ -41,12 +41,18 @@ function addLinesFromReleases(releases, dialect) {
       return map;
     }, []);
 
-    storiesByCategory.sort(
-      ([categoryA], [categoryB]) => {
-        return (KNOWN_CATEGORIES[categoryA] || 0) -
-          (KNOWN_CATEGORIES[categoryB] || 0)
+    storiesByCategory.sort(([categoryA], [categoryB]) => {
+      const catA = Object.values(KNOWN_CATEGORIES).find((cat) =>
+        cat.name === categoryA);
+      const catB = Object.values(KNOWN_CATEGORIES).find((cat) =>
+        cat.name === categoryB);
+
+      if(!catA || !catB) {
+        return 0;
       }
-    );
+
+      return catA.order - catB.order;
+    });
 
     storiesByCategory.forEach(([categoryName, stories]) => {
       lines.push(writeHeading(categoryName, 2, dialect));
