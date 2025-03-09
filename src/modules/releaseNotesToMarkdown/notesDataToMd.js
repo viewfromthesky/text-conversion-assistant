@@ -47,8 +47,12 @@ function addLinesFromReleases(releases, dialect) {
       const catB = Object.values(KNOWN_CATEGORIES).find((cat) =>
         cat.name === categoryB);
 
-      if(!catA || !catB) {
+      if(!catA && !catB) {
         return 0;
+      } else if(!catA) {
+        return 1;
+      } else if (!catB) {
+        return -1;
       }
 
       return catA.order - catB.order;
